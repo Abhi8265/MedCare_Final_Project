@@ -66,7 +66,7 @@ function AppointmentList({ onAddAppointment }) {
       }
 
       const response = await fetch(
-        "http://127.0.0.1:5000/api/appointments",
+        "https://medcarefinalproject-production.up.railway.app/api/appointments",
         {
           method: "GET",
           headers: {
@@ -388,7 +388,7 @@ function AppointmentList({ onAddAppointment }) {
       }
 
       const response = await fetch(
-        `http://127.0.0.1:5000/api/appointments/${id}`,
+        `https://medcarefinalproject-production.up.railway.app/api/appointments/${id}`,
         {
           method: "PATCH",
           headers: {
@@ -466,7 +466,7 @@ function AppointmentList({ onAddAppointment }) {
       }
 
       const response = await fetch(
-        `http://127.0.0.1:5000/api/appointments/${id}`,
+        `https://medcarefinalproject-production.up.railway.app/api/appointments/${id}`,
         {
           method: "DELETE",
           headers: {

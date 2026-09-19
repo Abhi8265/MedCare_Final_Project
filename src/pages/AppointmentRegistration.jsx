@@ -47,7 +47,7 @@ function AppointmentRegistration({ onBack }) {
   const fetchPatients = async () => {
     try {
       const response = await fetch(
-        "http://127.0.0.1:5000/api/patients",
+        "https://medcarefinalproject-production.up.railway.app/api/patients",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -74,7 +74,7 @@ function AppointmentRegistration({ onBack }) {
   const fetchDoctors = async () => {
     try {
       const response = await fetch(
-        "http://127.0.0.1:5000/api/doctors",
+        "https://medcarefinalproject-production.up.railway.app/api/doctors",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -106,7 +106,7 @@ function AppointmentRegistration({ onBack }) {
   const fetchCurrentPatient = async (userId) => {
     try {
       const response = await fetch(
-        "http://127.0.0.1:5000/api/patients",
+        "https://medcarefinalproject-production.up.railway.app/api/patients",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -259,7 +259,7 @@ function AppointmentRegistration({ onBack }) {
       );
 
       const response = await fetch(
-        "http://127.0.0.1:5000/api/appointments",
+        "https://medcarefinalproject-production.up.railway.app/api/appointments",
         {
           method: "POST",
 

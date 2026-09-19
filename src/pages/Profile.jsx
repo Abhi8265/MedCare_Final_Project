@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const API_URL = "http://127.0.0.1:5000/api";
+const API_URL = "https://medcarefinalproject-production.up.railway.app/api";
 
 function Profile() {
   const [user, setUser] = useState(null);

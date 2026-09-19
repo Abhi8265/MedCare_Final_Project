@@ -44,10 +44,10 @@ function PatientList({ onAddPatient }) {
       }
 
       const url = searchValue.trim()
-        ? `http://127.0.0.1:5000/api/patients?search=${encodeURIComponent(
+        ? `https://medcarefinalproject-production.up.railway.app/api/patients?search=${encodeURIComponent(
             searchValue.trim()
           )}`
-        : "http://127.0.0.1:5000/api/patients";
+        : "https://medcarefinalproject-production.up.railway.app/api/patients";
 
       const response = await fetch(url, {
         headers: {
@@ -193,7 +193,7 @@ function PatientList({ onAddPatient }) {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        `http://127.0.0.1:5000/api/patients/${id}`,
+        `https://medcarefinalproject-production.up.railway.app/api/patients/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -273,7 +273,7 @@ function PatientList({ onAddPatient }) {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        `http://127.0.0.1:5000/api/patients/${editingPatient.id}`,
+        `https://medcarefinalproject-production.up.railway.app/api/patients/${editingPatient.id}`,
         {
           method: "PUT",
           headers: {

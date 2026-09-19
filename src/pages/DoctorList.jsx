@@ -48,7 +48,7 @@ function DoctorList({
       }
 
       const response = await fetch(
-        "http://127.0.0.1:5000/api/doctors",
+        "https://medcarefinalproject-production.up.railway.app/api/doctors",
         {
           method: "GET",
           headers: {
@@ -291,7 +291,7 @@ function DoctorList({
       }
 
       const response = await fetch(
-        `http://127.0.0.1:5000/api/doctors/${id}`,
+        `https://medcarefinalproject-production.up.railway.app/api/doctors/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -361,7 +361,7 @@ function DoctorList({
       }
 
       const response = await fetch(
-        `http://127.0.0.1:5000/api/doctors/${editingDoctor.id}`,
+        `https://medcarefinalproject-production.up.railway.app/api/doctors/${editingDoctor.id}`,
         {
           method: "PUT",
           headers: {

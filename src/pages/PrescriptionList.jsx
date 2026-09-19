@@ -102,7 +102,7 @@ function PrescriptionList({
       }
 
       const response = await fetch(
-        "http://127.0.0.1:5000/api/prescriptions",
+        "https://medcarefinalproject-production.up.railway.app/api/prescriptions",
         {
           method: "GET",
           headers: {
@@ -712,7 +712,7 @@ function PrescriptionList({
 
       const response =
         await fetch(
-          `http://127.0.0.1:5000/api/prescriptions/${editingPrescription.id}`,
+          `https://medcarefinalproject-production.up.railway.app/api/prescriptions/${editingPrescription.id}`,
           {
             method: "PUT",
             headers: {
@@ -808,7 +808,7 @@ function PrescriptionList({
 
       const response =
         await fetch(
-          `http://127.0.0.1:5000/api/prescriptions/${id}`,
+          `https://medcarefinalproject-production.up.railway.app/api/prescriptions/${id}`,
           {
             method: "DELETE",
             headers: {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const API = "http://127.0.0.1:5000/api/announcements";
+const API = "https://medcarefinalproject-production.up.railway.app/api/announcements";
 
 
 const announcementStyles = `

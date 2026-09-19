@@ -52,7 +52,7 @@ function PrescriptionRegistration({ onBack }) {
       }
 
       const response = await fetch(
-        "http://127.0.0.1:5000/api/appointments",
+        "https://medcarefinalproject-production.up.railway.app/api/appointments",
         {
           method: "GET",
           headers: {
@@ -346,7 +346,7 @@ function PrescriptionRegistration({ onBack }) {
       setLoading(true);
 
       const response = await fetch(
-        "http://127.0.0.1:5000/api/prescriptions",
+        "https://medcarefinalproject-production.up.railway.app/api/prescriptions",
         {
           method: "POST",
           headers: {

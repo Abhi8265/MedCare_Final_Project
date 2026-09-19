@@ -41,7 +41,7 @@ function PatientRegistration() {
       }
 
       const response = await fetch(
-        "http://127.0.0.1:5000/api/patients",
+        "https://medcarefinalproject-production.up.railway.app/api/patients",
         {
           method: "POST",
           headers: {

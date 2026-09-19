@@ -44,7 +44,7 @@ function MedicalRecordList({ onAddRecord, canAdd = false }) {
   const canDelete = isAdmin;
 
   const API_URL =
-    "http://127.0.0.1:5000/api/medical-records";
+    "https://medcarefinalproject-production.up.railway.app/api/medical-records";
 
   // =====================================================
   // FETCH MEDICAL RECORDS

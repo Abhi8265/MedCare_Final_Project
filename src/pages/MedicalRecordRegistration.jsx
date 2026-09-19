@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const API_BASE = "http://127.0.0.1:5000";
+const API_BASE = "https://medcarefinalproject-production.up.railway.app";
 
 function MedicalRecordRegistration({ onBack }) {
   const [patients, setPatients] = useState([]);
