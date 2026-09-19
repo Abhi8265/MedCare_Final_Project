@@ -6,6 +6,7 @@ const authenticateToken = require("./authMiddleware");
 const allowRoles = require("./roleMiddleware");
 
 const db = require("./db");
+
 const adminRoutes = require("./routes/adminRoutes");
 const authRoutes = require("./routes/authRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
@@ -29,55 +30,71 @@ const allowedOrigins = [
   "https://med-care-final-project-fyu1t7v5-med-care2.vercel.app",
 ];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests without Origin
-      // (Postman, browser direct requests, etc.)
-      if (!origin) {
-        return callback(null, true);
-      }
+const corsOptions = {
+  origin: function (origin, callback) {
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+    // Postman / direct requests
+    if (!origin) {
+      return callback(null, true);
+    }
 
-      // Allow localhost for local development
-      if (
-        origin.startsWith("http://localhost:") ||
-        origin.startsWith("http://127.0.0.1:")
-      ) {
-        return callback(null, true);
-      }
+    // Exact allowed production domains
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
 
-      return callback(
-        new Error("Not allowed by CORS")
-      );
-    },
+    // Vercel preview deployments
+    if (
+      origin.endsWith(".vercel.app")
+    ) {
+      return callback(null, true);
+    }
 
-    methods: [
-      "GET",
-      "POST",
-      "PUT",
-      "PATCH",
-      "DELETE",
-      "OPTIONS",
-    ],
+    // Local development
+    if (
+      origin.startsWith("http://localhost:") ||
+      origin.startsWith("http://127.0.0.1:")
+    ) {
+      return callback(null, true);
+    }
 
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-    ],
+    console.log("❌ CORS blocked:", origin);
 
-    credentials: true,
+    return callback(
+      new Error("Not allowed by CORS")
+    );
+  },
 
-    optionsSuccessStatus: 204,
-  })
-);
+  methods: [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+  ],
+
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+  ],
+
+  credentials: true,
+
+  optionsSuccessStatus: 204,
+};
+
+
+// CORS middleware
+app.use(cors(corsOptions));
+
+
+// Explicitly handle browser preflight requests
+app.options(/.*/, cors(corsOptions));
 
 
 // =================================================
-// EXPRESS JSON
+// JSON
 // =================================================
 
 app.use(
@@ -92,15 +109,20 @@ app.use(
 // =================================================
 
 app.use(
+  "/api/auth",
+  authRoutes
+);
+
+
+// =================================================
+// ADMIN
+// =================================================
+
+app.use(
   "/api/admin",
   authenticateToken,
   allowRoles("admin"),
   adminRoutes
-);
-
-app.use(
-  "/api/auth",
-  authRoutes
 );
 
 
@@ -342,6 +364,7 @@ app.use(
 
 app.get("/", (req, res) => {
   res.json({
+    success: true,
     message:
       "Hospital Management System API is running 🚀",
   });
@@ -359,6 +382,7 @@ app.get("/api/test-db", (req, res) => {
     (err, results) => {
 
       if (err) {
+
         console.error(
           "Database test error:",
           err
@@ -371,7 +395,7 @@ app.get("/api/test-db", (req, res) => {
         });
       }
 
-      res.json({
+      return res.json({
         success: true,
         message:
           "Database is working ✅",
@@ -383,16 +407,18 @@ app.get("/api/test-db", (req, res) => {
 
 
 // =================================================
-// 404 API HANDLER
+// 404
 // =================================================
 
 app.use((req, res) => {
+
   res.status(404).json({
     success: false,
     message: "API endpoint not found",
     path: req.originalUrl,
     method: req.method,
   });
+
 });
 
 
@@ -404,7 +430,7 @@ app.use(
   (err, req, res, next) => {
 
     console.error(
-      "Server error:",
+      "❌ Server error:",
       err.message
     );
 
@@ -412,16 +438,21 @@ app.use(
       err.message ===
       "Not allowed by CORS"
     ) {
+
       return res.status(403).json({
         success: false,
-        message: "CORS origin not allowed",
+        message:
+          "CORS origin not allowed",
       });
+
     }
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message:
+        "Internal server error",
     });
+
   }
 );
 
@@ -437,8 +468,14 @@ app.listen(
   PORT,
   "0.0.0.0",
   () => {
+
     console.log(
-      `Server running on port ${PORT}`
+      `🚀 Server running on port ${PORT}`
     );
+
+    console.log(
+      `🌐 Environment: ${process.env.NODE_ENV || "production"}`
+    );
+
   }
 );
