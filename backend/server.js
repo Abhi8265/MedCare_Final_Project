@@ -20,10 +20,53 @@ const app = express();
 
 
 // =================================================
-// MIDDLEWARE
+// CORS - PRODUCTION
 // =================================================
 
-app.use(cors());
+const allowedOrigins = [
+  "https://med-care-final-project.vercel.app",
+  "https://med-care-final-project-git-main-med-care2.vercel.app",
+];
+
+
+// =================================================
+// CORS MIDDLEWARE
+// =================================================
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
+
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+  );
+
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
+
+  res.header(
+    "Access-Control-Allow-Credentials",
+    "true"
+  );
+
+  // Browser preflight request
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
+
+
+// =================================================
+// EXPRESS JSON
+// =================================================
 
 app.use(
   express.json({
@@ -42,6 +85,7 @@ app.use(
   allowRoles("admin"),
   adminRoutes
 );
+
 app.use(
   "/api/auth",
   authRoutes
@@ -67,11 +111,6 @@ app.use(
 
 // =================================================
 // PATIENTS
-//
-// GET    = Admin + Doctor + Patient
-// POST   = Admin only
-// PUT    = Admin only
-// DELETE = Admin only
 // =================================================
 
 app.use(
@@ -107,11 +146,6 @@ app.use(
 
 // =================================================
 // DOCTORS
-//
-// GET    = Admin + Doctor + Patient
-// POST   = Admin only
-// PUT    = Admin only
-// DELETE = Admin only
 // =================================================
 
 app.use(
@@ -147,12 +181,6 @@ app.use(
 
 // =================================================
 // APPOINTMENTS
-//
-// GET    = Admin + Doctor + Patient
-// POST   = Admin + Patient
-// PUT    = Admin + Doctor
-// PATCH  = Admin + Doctor
-// DELETE = Admin only
 // =================================================
 
 app.use(
@@ -201,11 +229,6 @@ app.use(
 
 // =================================================
 // PRESCRIPTIONS
-//
-// GET    = Admin + Doctor + Patient
-// POST   = Admin + Doctor
-// PUT    = Admin + Doctor
-// DELETE = Admin only
 // =================================================
 
 app.use(
@@ -213,7 +236,6 @@ app.use(
   authenticateToken,
   (req, res, next) => {
 
-    // View prescriptions
     if (req.method === "GET") {
       return allowRoles(
         "admin",
@@ -222,7 +244,6 @@ app.use(
       )(req, res, next);
     }
 
-    // Create / Edit prescriptions
     if (
       req.method === "POST" ||
       req.method === "PUT"
@@ -233,7 +254,6 @@ app.use(
       )(req, res, next);
     }
 
-    // Delete prescriptions
     if (req.method === "DELETE") {
       return allowRoles("admin")(
         req,
@@ -250,11 +270,6 @@ app.use(
 
 // =================================================
 // MEDICAL RECORDS
-//
-// GET    = Admin + Doctor + Patient
-// POST   = Admin + Doctor
-// PUT    = Admin + Doctor
-// DELETE = Admin only
 // =================================================
 
 app.use(
@@ -296,10 +311,6 @@ app.use(
 
 // =================================================
 // ANNOUNCEMENTS
-//
-// Admin   = View + Create + Delete
-// Doctor  = View
-// Patient = View
 // =================================================
 
 app.use(
@@ -318,52 +329,46 @@ app.use(
 // HOME
 // =================================================
 
-app.get(
-  "/",
-  (req, res) => {
-    res.json({
-      message:
-        "Hospital Management System API is running 🚀",
-    });
-  }
-);
+app.get("/", (req, res) => {
+  res.json({
+    message:
+      "Hospital Management System API is running 🚀",
+  });
+});
 
 
 // =================================================
 // DATABASE TEST
 // =================================================
 
-app.get(
-  "/api/test-db",
-  (req, res) => {
+app.get("/api/test-db", (req, res) => {
 
-    db.query(
-      "SELECT 1 AS result",
-      (err, results) => {
+  db.query(
+    "SELECT 1 AS result",
+    (err, results) => {
 
-        if (err) {
-          console.error(
-            "Database test error:",
-            err
-          );
+      if (err) {
+        console.error(
+          "Database test error:",
+          err
+        );
 
-          return res.status(500).json({
-            success: false,
-            message:
-              "Database connection failed",
-          });
-        }
-
-        res.json({
-          success: true,
+        return res.status(500).json({
+          success: false,
           message:
-            "Database is working ✅",
-          result: results,
+            "Database connection failed",
         });
       }
-    );
-  }
-);
+
+      res.json({
+        success: true,
+        message:
+          "Database is working ✅",
+        result: results,
+      });
+    }
+  );
+});
 
 
 // =================================================
@@ -375,9 +380,10 @@ const PORT =
 
 app.listen(
   PORT,
+  "0.0.0.0",
   () => {
     console.log(
-      `Server running on http://localhost:${PORT}`
+      `Server running on port ${PORT}`
     );
   }
 );

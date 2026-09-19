@@ -6,11 +6,13 @@ const authenticateToken = require("../authMiddleware");
 
 const router = express.Router();
 
-/* =====================================================
-   LOGIN
-===================================================== */
+
+// =====================================================
+// LOGIN
+// =====================================================
 
 router.post("/login", (req, res) => {
+
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -20,143 +22,197 @@ router.post("/login", (req, res) => {
     });
   }
 
+  const cleanEmail =
+    email.trim().toLowerCase();
+
   const sql = `
-    SELECT id, name, email, password, role
+    SELECT
+      id,
+      name,
+      email,
+      password,
+      role
     FROM users
     WHERE email = ?
+    LIMIT 1
   `;
 
-  db.query(sql, [email.trim().toLowerCase()], async (err, results) => {
-    if (err) {
-      console.error("Login database error:", err);
+  db.query(
+    sql,
+    [cleanEmail],
+    async (err, results) => {
 
-      return res.status(500).json({
-        success: false,
-        message: "Database error",
-      });
-    }
-
-    if (results.length === 0) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
-    }
-
-    const user = results[0];
-
-    try {
-      const passwordMatch = await bcrypt.compare(
-        password,
-        user.password
-      );
-
-      if (!passwordMatch) {
-        return res.status(401).json({
-          success: false,
-          message: "Invalid email or password",
-        });
-      }
-
-      const token = jwt.sign(
-        {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-        },
-        process.env.JWT_SECRET,
-        {
-          expiresIn: "1d",
-        }
-      );
-
-      return res.json({
-        success: true,
-        message: "Login successful",
-        token,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        },
-      });
-    } catch (error) {
-      console.error("Login password error:", error);
-
-      return res.status(500).json({
-        success: false,
-        message: "Server error",
-      });
-    }
-  });
-});
-
-/* =====================================================
-   GET PROFILE
-===================================================== */
-
-router.get(
-  "/profile",
-  authenticateToken,
-  (req, res) => {
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Authentication required.",
-      });
-    }
-
-    const sql = `
-      SELECT id, name, email, role, created_at
-      FROM users
-      WHERE id = ?
-    `;
-
-    db.query(sql, [userId], (err, results) => {
       if (err) {
         console.error(
-          "Get profile database error:",
+          "Login database error:",
           err
         );
 
         return res.status(500).json({
           success: false,
-          message: "Database error.",
+          message: "Database error",
         });
       }
 
+
+      // USER NOT FOUND
       if (results.length === 0) {
-        return res.status(404).json({
+        return res.status(401).json({
           success: false,
-          message: "User not found.",
+          message:
+            "Invalid email or password",
         });
       }
 
-      return res.json({
-        success: true,
-        user: results[0],
-      });
-    });
-  }
-);
 
-/* =====================================================
-   UPDATE PROFILE
-===================================================== */
+      const user = results[0];
 
-router.put(
+
+      try {
+
+        // CHECK PASSWORD
+        const passwordMatch =
+          await bcrypt.compare(
+            password,
+            user.password
+          );
+
+
+        if (!passwordMatch) {
+          return res.status(401).json({
+            success: false,
+            message:
+              "Invalid email or password",
+          });
+        }
+
+
+        // JWT TOKEN
+        const token = jwt.sign(
+          {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+          },
+          process.env.JWT_SECRET,
+          {
+            expiresIn: "1d",
+          }
+        );
+
+
+        // SUCCESS
+        return res.json({
+          success: true,
+          message: "Login successful",
+
+          token,
+
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          },
+        });
+
+      } catch (error) {
+
+        console.error(
+          "Login password error:",
+          error
+        );
+
+        return res.status(500).json({
+          success: false,
+          message: "Server error",
+        });
+      }
+    }
+  );
+});
+
+
+// =====================================================
+// GET PROFILE
+// =====================================================
+
+router.get(
   "/profile",
   authenticateToken,
   (req, res) => {
+
     const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: "Authentication required.",
+        message:
+          "Authentication required.",
+      });
+    }
+
+    const sql = `
+      SELECT
+        id,
+        name,
+        email,
+        role,
+        created_at
+      FROM users
+      WHERE id = ?
+    `;
+
+    db.query(
+      sql,
+      [userId],
+      (err, results) => {
+
+        if (err) {
+          console.error(
+            "Get profile database error:",
+            err
+          );
+
+          return res.status(500).json({
+            success: false,
+            message: "Database error.",
+          });
+        }
+
+        if (results.length === 0) {
+          return res.status(404).json({
+            success: false,
+            message: "User not found.",
+          });
+        }
+
+        return res.json({
+          success: true,
+          user: results[0],
+        });
+      }
+    );
+  }
+);
+
+
+// =====================================================
+// UPDATE PROFILE
+// =====================================================
+
+router.put(
+  "/profile",
+  authenticateToken,
+  (req, res) => {
+
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message:
+          "Authentication required.",
       });
     }
 
@@ -165,12 +221,16 @@ router.put(
     if (!name || !email) {
       return res.status(400).json({
         success: false,
-        message: "Name and email are required.",
+        message:
+          "Name and email are required.",
       });
     }
 
-    const cleanName = name.trim();
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanName =
+      name.trim();
+
+    const cleanEmail =
+      email.trim().toLowerCase();
 
     if (cleanName.length < 2) {
       return res.status(400).json({
@@ -200,6 +260,7 @@ router.put(
       `,
       [cleanEmail, userId],
       (checkErr, results) => {
+
         if (checkErr) {
           console.error(
             "Profile email check error:",
@@ -226,8 +287,13 @@ router.put(
             SET name = ?, email = ?
             WHERE id = ?
           `,
-          [cleanName, cleanEmail, userId],
+          [
+            cleanName,
+            cleanEmail,
+            userId,
+          ],
           (updateErr, result) => {
+
             if (updateErr) {
               console.error(
                 "Update profile error:",
@@ -244,18 +310,25 @@ router.put(
             if (result.affectedRows === 0) {
               return res.status(404).json({
                 success: false,
-                message: "User not found.",
+                message:
+                  "User not found.",
               });
             }
 
             db.query(
               `
-                SELECT id, name, email, role, created_at
+                SELECT
+                  id,
+                  name,
+                  email,
+                  role,
+                  created_at
                 FROM users
                 WHERE id = ?
               `,
               [userId],
               (getErr, updatedResults) => {
+
                 if (getErr) {
                   console.error(
                     "Get updated profile error:",
@@ -273,7 +346,8 @@ router.put(
                   success: true,
                   message:
                     "Profile updated successfully.",
-                  user: updatedResults[0],
+                  user:
+                    updatedResults[0],
                 });
               }
             );
@@ -284,31 +358,28 @@ router.put(
   }
 );
 
-/* =====================================================
-   CREATE NEW ADMIN
-   ADMIN ONLY
-===================================================== */
+
+// =====================================================
+// CREATE NEW ADMIN
+// =====================================================
 
 router.post(
   "/create-admin",
   authenticateToken,
   async (req, res) => {
-    try {
-      /* -----------------------------------------------
-         CHECK CURRENT USER
-      ------------------------------------------------ */
 
-      if (!req.user || req.user.role !== "admin") {
+    try {
+
+      if (
+        !req.user ||
+        req.user.role !== "admin"
+      ) {
         return res.status(403).json({
           success: false,
           message:
             "Only admin can create a new admin.",
         });
       }
-
-      /* -----------------------------------------------
-         GET FORM DATA
-      ------------------------------------------------ */
 
       const {
         name,
@@ -317,9 +388,6 @@ router.post(
         confirmPassword,
       } = req.body;
 
-      /* -----------------------------------------------
-         BASIC VALIDATION
-      ------------------------------------------------ */
 
       if (!name || !email || !password) {
         return res.status(400).json({
@@ -329,13 +397,13 @@ router.post(
         });
       }
 
-      const cleanName = name.trim();
+
+      const cleanName =
+        name.trim();
+
       const cleanEmail =
         email.trim().toLowerCase();
 
-      /* -----------------------------------------------
-         NAME VALIDATION
-      ------------------------------------------------ */
 
       if (cleanName.length < 2) {
         return res.status(400).json({
@@ -345,9 +413,6 @@ router.post(
         });
       }
 
-      /* -----------------------------------------------
-         EMAIL VALIDATION
-      ------------------------------------------------ */
 
       const emailRegex =
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -360,9 +425,6 @@ router.post(
         });
       }
 
-      /* -----------------------------------------------
-         PASSWORD VALIDATION
-      ------------------------------------------------ */
 
       if (password.length < 6) {
         return res.status(400).json({
@@ -372,15 +434,6 @@ router.post(
         });
       }
 
-      /* -----------------------------------------------
-         CONFIRM PASSWORD
-         
-         Frontend currently sends password only.
-         Therefore, if confirmPassword is missing,
-         we will not block the creation.
-         
-         If it is provided, it must match.
-      ------------------------------------------------ */
 
       if (
         confirmPassword !== undefined &&
@@ -393,9 +446,6 @@ router.post(
         });
       }
 
-      /* -----------------------------------------------
-         CHECK EMAIL ALREADY EXISTS
-      ------------------------------------------------ */
 
       db.query(
         `
@@ -406,6 +456,7 @@ router.post(
         `,
         [cleanEmail],
         async (err, results) => {
+
           if (err) {
             console.error(
               "Check admin email error:",
@@ -418,9 +469,6 @@ router.post(
             });
           }
 
-          /* -------------------------------------------
-             DUPLICATE EMAIL
-          ------------------------------------------- */
 
           if (results.length > 0) {
             return res.status(409).json({
@@ -430,16 +478,19 @@ router.post(
             });
           }
 
-          /* -------------------------------------------
-             HASH PASSWORD
-          ------------------------------------------- */
 
           let hashedPassword;
 
           try {
+
             hashedPassword =
-              await bcrypt.hash(password, 10);
+              await bcrypt.hash(
+                password,
+                10
+              );
+
           } catch (hashError) {
+
             console.error(
               "Password hashing error:",
               hashError
@@ -452,9 +503,6 @@ router.post(
             });
           }
 
-          /* -------------------------------------------
-             INSERT ADMIN
-          ------------------------------------------- */
 
           db.query(
             `
@@ -468,6 +516,7 @@ router.post(
               hashedPassword,
             ],
             (insertErr, result) => {
+
               if (insertErr) {
                 console.error(
                   "Create admin database error:",
@@ -481,9 +530,6 @@ router.post(
                 });
               }
 
-              /* -------------------------------------
-                 SUCCESS
-              ------------------------------------- */
 
               return res.status(201).json({
                 success: true,
@@ -500,7 +546,9 @@ router.post(
           );
         }
       );
+
     } catch (error) {
+
       console.error(
         "Create admin server error:",
         error
@@ -514,20 +562,23 @@ router.post(
   }
 );
 
-/* =====================================================
-   CHANGE PASSWORD
-===================================================== */
+
+// =====================================================
+// CHANGE PASSWORD
+// =====================================================
 
 router.put(
   "/change-password",
   authenticateToken,
   (req, res) => {
+
     const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: "Authentication required.",
+        message:
+          "Authentication required.",
       });
     }
 
@@ -536,6 +587,7 @@ router.put(
       newPassword,
       confirmPassword,
     } = req.body;
+
 
     if (
       !currentPassword ||
@@ -549,13 +601,17 @@ router.put(
       });
     }
 
-    if (newPassword !== confirmPassword) {
+
+    if (
+      newPassword !== confirmPassword
+    ) {
       return res.status(400).json({
         success: false,
         message:
           "New password and confirm password do not match.",
       });
     }
+
 
     if (newPassword.length < 6) {
       return res.status(400).json({
@@ -565,6 +621,7 @@ router.put(
       });
     }
 
+
     db.query(
       `
         SELECT id, password
@@ -573,6 +630,7 @@ router.put(
       `,
       [userId],
       async (err, results) => {
+
         if (err) {
           console.error(
             "Change password database error:",
@@ -585,21 +643,27 @@ router.put(
           });
         }
 
+
         if (results.length === 0) {
           return res.status(404).json({
             success: false,
-            message: "User not found.",
+            message:
+              "User not found.",
           });
         }
 
+
         const user = results[0];
 
+
         try {
+
           const passwordMatch =
             await bcrypt.compare(
               currentPassword,
               user.password
             );
+
 
           if (!passwordMatch) {
             return res.status(401).json({
@@ -609,11 +673,13 @@ router.put(
             });
           }
 
+
           const samePassword =
             await bcrypt.compare(
               newPassword,
               user.password
             );
+
 
           if (samePassword) {
             return res.status(400).json({
@@ -623,11 +689,13 @@ router.put(
             });
           }
 
+
           const hashedPassword =
             await bcrypt.hash(
               newPassword,
               10
             );
+
 
           db.query(
             `
@@ -635,8 +703,12 @@ router.put(
               SET password = ?
               WHERE id = ?
             `,
-            [hashedPassword, userId],
+            [
+              hashedPassword,
+              userId,
+            ],
             (updateErr, result) => {
+
               if (updateErr) {
                 console.error(
                   "Update password error:",
@@ -650,6 +722,7 @@ router.put(
                 });
               }
 
+
               if (
                 result.affectedRows === 0
               ) {
@@ -660,6 +733,7 @@ router.put(
                 });
               }
 
+
               return res.json({
                 success: true,
                 message:
@@ -667,7 +741,9 @@ router.put(
               });
             }
           );
+
         } catch (passwordError) {
+
           console.error(
             "Change password error:",
             passwordError
@@ -684,8 +760,9 @@ router.put(
   }
 );
 
-/* =====================================================
-   EXPORT
-===================================================== */
+
+// =====================================================
+// EXPORT
+// =====================================================
 
 module.exports = router;
