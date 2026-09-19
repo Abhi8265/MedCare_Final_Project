@@ -20,48 +20,60 @@ const app = express();
 
 
 // =================================================
-// CORS - PRODUCTION
+// CORS
 // =================================================
 
 const allowedOrigins = [
   "https://med-care-final-project.vercel.app",
   "https://med-care-final-project-git-main-med-care2.vercel.app",
+  "https://med-care-final-project-fyu1t7v5-med-care2.vercel.app",
 ];
 
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests without Origin
+      // (Postman, browser direct requests, etc.)
+      if (!origin) {
+        return callback(null, true);
+      }
 
-// =================================================
-// CORS MIDDLEWARE
-// =================================================
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
+      // Allow localhost for local development
+      if (
+        origin.startsWith("http://localhost:") ||
+        origin.startsWith("http://127.0.0.1:")
+      ) {
+        return callback(null, true);
+      }
 
-  if (origin && allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin);
-  }
+      return callback(
+        new Error("Not allowed by CORS")
+      );
+    },
 
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET,POST,PUT,PATCH,DELETE,OPTIONS"
-  );
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+    ],
 
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization"
-  );
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+    ],
 
-  res.header(
-    "Access-Control-Allow-Credentials",
-    "true"
-  );
+    credentials: true,
 
-  // Browser preflight request
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
-
-  next();
-});
+    optionsSuccessStatus: 204,
+  })
+);
 
 
 // =================================================
@@ -94,7 +106,6 @@ app.use(
 
 // =================================================
 // DASHBOARD
-// Admin + Doctor + Patient
 // =================================================
 
 app.use(
@@ -369,6 +380,50 @@ app.get("/api/test-db", (req, res) => {
     }
   );
 });
+
+
+// =================================================
+// 404 API HANDLER
+// =================================================
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "API endpoint not found",
+    path: req.originalUrl,
+    method: req.method,
+  });
+});
+
+
+// =================================================
+// GLOBAL ERROR HANDLER
+// =================================================
+
+app.use(
+  (err, req, res, next) => {
+
+    console.error(
+      "Server error:",
+      err.message
+    );
+
+    if (
+      err.message ===
+      "Not allowed by CORS"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "CORS origin not allowed",
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+);
 
 
 // =================================================
